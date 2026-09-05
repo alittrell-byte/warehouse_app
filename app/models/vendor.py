@@ -1,22 +1,10 @@
-import datetime
-
-from sqlalchemy import String, ForeignKey, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
 
-class Product(Base):
-    __tablename__ = "product"
+class Vendor(Base):
+    __tablename__ = 'vendor'
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    internal_sku: Mapped[str]    = mapped_column(String(255), nullable=False, unique=True)
-    name: Mapped[str]            = mapped_column(String(255), nullable=False)
-    manufacturer_id: Mapped[int] = mapped_column(ForeignKey("manufacturer.manufacturer_id"))
-    category_id: Mapped[int]     = mapped_column(ForeignKey("category.category_id"), nullable=False)
-    product_type_id: Mapped[int] = mapped_column(ForeignKey("product_type.product_type_id"), nullable=False)
-    brand_id: Mapped[int]        = mapped_column(ForeignKey("brand.brand_id"))
-    family_id: Mapped[int]       = mapped_column(ForeignKey("family.family_id"))
-    options: Mapped[dict]        = mapped_column(JSONB, nullable=False, default=dict)
-    is_active: Mapped[bool]      = mapped_column(nullable=False, default=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
