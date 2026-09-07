@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 
 # from app.database import Base
-from app.routers import purchase_orders, vendors, po_line_items, products, product_vendors, receipts
+from app.routers import purchase_orders, vendors, po_line_items, products, product_vendors, receipts, packing_slips, packing_slip_lines
 
 # Create tables on startup — fine for now, Alembic takes over once migrations exist
 # Base.metadata.create_all(bind=engine)
@@ -19,8 +19,8 @@ app.include_router(po_line_items.router, prefix="/po-line-items", tags=["PO Line
 app.include_router(products.router, prefix="/products", tags=["Products"])
 app.include_router(product_vendors.router, prefix="/product-vendors", tags=["Product Vendors"])
 app.include_router(receipts.router, prefix="/receipts", tags=["Receipts"])
-# app.include_router(packing_slips.router, prefix="/packing_slips", tags=["Packing Slips"])
-# app.include_router(packing_slip_lines.router, prefix="/packing_slip_lines", tags=["Packing Slip Lines"])
+app.include_router(packing_slips.router, prefix="/packing-slips", tags=["Packing Slips"])
+app.include_router(packing_slip_lines.router, prefix="/packing-slip-lines", tags=["Packing Slip Lines"])
 
 
 @app.get("/health")

@@ -15,6 +15,9 @@ from app.models.product import Product
 from app.models.product_vendor import ProductVendor
 from app.models.purchase_order import PurchaseOrder
 from app.models.po_line_item import POLineItem
+from app.models.packing_slip import PackingSlip
+from app.models.packing_slip_line import PackingSlipLine
+from app.models.receipt import Receipt
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

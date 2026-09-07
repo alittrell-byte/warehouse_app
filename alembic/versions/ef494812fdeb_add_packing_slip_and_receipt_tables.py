@@ -1,8 +1,8 @@
-"""add packing slip tables
+"""add packing slip and receipt tables
 
-Revision ID: 964d8676ba6a
-Revises: 892738a35b02
-Create Date: 2026-09-04 04:29:29.755434
+Revision ID: ef494812fdeb
+Revises: 48ba7397eacb
+Create Date: 2026-09-06 23:25:22.203364
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '964d8676ba6a'
-down_revision: Union[str, Sequence[str], None] = '892738a35b02'
+revision: str = 'ef494812fdeb'
+down_revision: Union[str, Sequence[str], None] = '48ba7397eacb'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
