@@ -5,36 +5,37 @@ from app.database import get_db
 from app.models.receipt import Receipt
 from app.models.packing_slip_line import PackingSlipLine
 from app.schemas.receipt import ReceiptCreate, ReceiptOut, ReceiptDecision
+from app.services.reconciliation import evaluate_receipt
 
 router = APIRouter()
 
 TOLERANCE_PCT = 0.02  # hardcoded for now -- swap for reconciliation_tolerance_policy later
 
-
+# Creates a new receipt from a completed packing slip line
 @router.post("/", response_model=ReceiptOut)
 def create_receipt(receipt_data: ReceiptCreate, db: Session = Depends(get_db)):
+
+    # move to crud file
     slip_line = db.get(PackingSlipLine, receipt_data.packing_slip_line_id)
+
+    # confirm slip_line exists
     if slip_line is None:
         raise HTTPException(status_code=404, detail="packing_slip_line not found")
 
+
     qty_shipped = slip_line.qty_shipped
     qty_counted = receipt_data.qty_counted
-
-    is_overage = qty_counted > qty_shipped
-    is_shortage = qty_counted < qty_shipped
 
     is_duplicate = db.query(Receipt).filter(
         Receipt.packing_slip_line_id == receipt_data.packing_slip_line_id
     ).first() is not None
 
-    variance_pct = abs(qty_counted - qty_shipped) / qty_shipped if qty_shipped else 1.0
+    result = evaluate_receipt(qty_counted, qty_shipped, is_duplicate)
 
-    if is_duplicate or variance_pct > TOLERANCE_PCT:
-        approval_status = "pending"
-        qty_accepted = None
-    else:
-        approval_status = "auto"
-        qty_accepted = qty_counted
+    is_overage = result["is_overage"]
+    is_shortage = result["is_shortage"]
+    approval_status = result["approval_status"]
+    qty_accepted = result["qty_accepted"]
 
     new_receipt = Receipt(
         po_line_item_id=receipt_data.po_line_item_id,

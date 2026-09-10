@@ -1,29 +1,54 @@
 from decimal import Decimal
 from datetime import date
+from typing import Optional, TypedDict
 
-def check_quantity_discrepancy(ordered_qty: int, received_qty: int) -> dict:
-    if received_qty < ordered_qty:
-        return {"status": "short_shipped", "difference": ordered_qty - received_qty}
-    elif received_qty > ordered_qty:
-        return {"status": "over_shipped", "difference": received_qty - ordered_qty}
-    return {"status": "ok", "difference": 0}
 
-def check_price_discrepancy(expected_price: Decimal, received_price: Decimal, tolerance_pct: float) -> dict:
+class ReceiptEvaluation(TypedDict):
+    is_overage: bool
+    is_shortage: bool
+    approval_status: str
+    qty_accepted: Optional[int]
 
-    pct_diff: float = round((abs(expected_price - received_price) / expected_price) * 100, 2)
-    price_diff: Decimal = abs(expected_price - received_price)
+def evaluate_receipt(
+    qty_counted: int,
+    qty_shipped: int,
+    is_duplicate: bool,
+    tolerance_pct: float = 0.02,
 
-    if received_price < expected_price and pct_diff >= tolerance_pct:
-        return {"status": "under_charged", "difference": expected_price - received_price, "pct_diff": pct_diff}
-    elif received_price > expected_price:
-        return {"status": "over_charged", "difference": received_price - expected_price, "pct_diff": pct_diff}
-    return {"status": "ok", "difference": price_diff, "pct_diff": pct_diff}
+) -> ReceiptEvaluation:
+    is_overage = qty_counted > qty_shipped
+    is_shortage = qty_counted < qty_shipped
 
-def check_delivery_timing(expected_date: date, received_date: date) -> dict:
-    return {}
+    variance_pct = abs(qty_counted - qty_shipped) / qty_shipped if qty_shipped else 1.0
 
-def is_duplicate_receipt(receipt_id: int, existing_receipt_ids: list[int]) -> bool:
-    return False
+    if is_duplicate or variance_pct > tolerance_pct:
+        approval_status = "pending"
+        qty_accepted = None
+    else:
+        approval_status = "auto"
+        qty_accepted = qty_counted
 
-def reconcile_line_item(line_item: dict, receipt: dict, tolerance_pct: float = 0.02) -> dict:
-    return {}
+    return {
+        "is_overage": is_overage,
+        "is_shortage": is_shortage,
+        "approval_status": approval_status,
+        "qty_accepted": qty_accepted
+    }
+
+def evaluate_price(
+    expected_price: Decimal,
+    invoiced_price: Decimal,
+    tolerance_pct: float = 0.02,
+) -> dict:
+    variance = invoiced_price - expected_price
+    variance_pct = abs(variance) / expected_price if expected_price else 1.0
+
+    is_mismatch = variance_pct > tolerance_pct
+    direction = "over_charged" if variance > 0 else "under_charged" if variance < 0 else "match"
+
+    return {
+        "is_problem": is_mismatch,
+        "direction": direction,
+        "variance": variance,
+        "variance_pct": variance_pct
+    }
