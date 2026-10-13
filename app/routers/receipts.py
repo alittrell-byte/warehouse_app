@@ -62,7 +62,7 @@ def decide_receipt(receipt_id: int, decision: ReceiptDecision, db: Session = Dep
     if receipt.approval_status != "pending":
         raise HTTPException(
             status_code=400,
-            detail=f"receipt is '{receipt.approval_status}', not awaiting review",
+            detail=f"receipt is '{receipt.approval_status.value}', not awaiting review",
         )
 
     receipt.qty_accepted = decision.qty_accepted

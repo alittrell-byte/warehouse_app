@@ -1,3 +1,4 @@
 .env
 .venv
+.envrc
 new_session.sh

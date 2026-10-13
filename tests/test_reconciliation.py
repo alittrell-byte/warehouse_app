@@ -94,3 +94,8 @@ def test_zero_charged():
 def test_free_item():
     result = evaluate_price(Decimal("0.00"), Decimal("0.00"))
     assert result["is_problem"] is False
+
+def test_free_item_but_invoiced_anyway():
+    result = evaluate_price(Decimal("0.00"), Decimal("5.00"))
+    assert result["is_problem"] is True
+    assert result["direction"] == "over_charged"

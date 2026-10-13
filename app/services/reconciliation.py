@@ -35,20 +35,17 @@ def evaluate_receipt(
         "qty_accepted": qty_accepted
     }
 
-def evaluate_price(
-    expected_price: Decimal,
-    invoiced_price: Decimal,
-    tolerance_pct: float = 0.02,
-) -> dict:
+def evaluate_price(expected_price: Decimal, invoiced_price: Decimal,
+                   tolerance_pct: Decimal = Decimal("0.02")) -> dict:
     variance = invoiced_price - expected_price
-    variance_pct = abs(variance) / expected_price if expected_price else 1.0
-
-    is_mismatch = variance_pct > tolerance_pct
-    direction = "over_charged" if variance > 0 else "under_charged" if variance < 0 else "match"
-
+    if expected_price == 0:
+        # agreed price is free: only a problem if they billed anything
+        variance_pct = Decimal(0) if invoiced_price == 0 else Decimal(1)
+    else:
+        variance_pct = abs(variance) / expected_price
     return {
-        "is_problem": is_mismatch,
-        "direction": direction,
+        "is_problem": variance_pct > tolerance_pct,
+        "direction": "over_charged" if variance > 0 else "under_charged" if variance < 0 else "match",
         "variance": variance,
-        "variance_pct": variance_pct
+        "variance_pct": variance_pct,
     }

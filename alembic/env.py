@@ -18,12 +18,14 @@ from app.models.po_line_item import POLineItem
 from app.models.packing_slip import PackingSlip
 from app.models.packing_slip_line import PackingSlipLine
 from app.models.receipt import Receipt
+from app.models.invoice import Invoice
+from app.models.invoice_line import InvoiceLine
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
-config = context.config
-config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
 
+config = context.config
+config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"].replace("postgresql://", "postgresql+psycopg2://", 1))
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:

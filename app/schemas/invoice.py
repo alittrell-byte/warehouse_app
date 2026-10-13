@@ -15,7 +15,7 @@ class InvoiceCreate(BaseModel):
     sub_total: Decimal
     tax_total: Decimal
     shipping_total: Decimal
-    notes: str
+    notes: Optional[str] = None
     
 
 class InvoiceOut(BaseModel):
@@ -29,7 +29,7 @@ class InvoiceOut(BaseModel):
     sub_total: Decimal
     tax_total: Decimal
     shipping_total: Decimal
-    notes: str
+    notes: Optional[str]
 
     class Config:
         from_attributes = True

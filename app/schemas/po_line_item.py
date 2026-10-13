@@ -21,7 +21,7 @@ class POLineItemOut(BaseModel):
     cost: Decimal
     qty_ordered: int
     expected_delivery_date: datetime.date
-    notes: str
+    notes: Optional[str] = None
 
     class Config:
         from_attributes = True
