@@ -20,8 +20,8 @@ class ProductVendorOut(BaseModel):
     vendor_id: int
     vendor_product_id: str
     cost: Decimal
-    msrp: Decimal
-    map_pricing: Decimal
+    msrp: Optional[Decimal]
+    map_pricing: Optional[Decimal]
     lead_time_days: int
     minimum_order_qty: int
     pack_qty: int

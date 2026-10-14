@@ -13,19 +13,19 @@ class Product(Base):
     internal_sku: Mapped[str]    = mapped_column(String(255), nullable=False, unique=True)
     name: Mapped[str]            = mapped_column(String(255), nullable=False)
     manufacturer_id: Mapped[int] = mapped_column(
-        # ForeignKey("manufacturer.id"), 
+        # ForeignKey("manufacturer.id"), # not built yet
         nullable=False)
     category_id: Mapped[int]     = mapped_column(
-        # ForeignKey("category.id"), 
+        # ForeignKey("category.id"), # not built yet
         nullable=False)
     product_type_id: Mapped[int] = mapped_column(
-        # ForeignKey("product_type.id"), 
+        # ForeignKey("product_type.id"), # not built yet
         nullable=False)
     brand_id: Mapped[int]        = mapped_column(
-        # ForeignKey("brand.id"), 
+        # ForeignKey("brand.id"), # not built yet
         nullable=False)
     family_id: Mapped[int]       = mapped_column(
-        # ForeignKey("product_family.id"), 
+        # ForeignKey("product_family.id"), # not built yet
         nullable=False)
     options: Mapped[dict]        = mapped_column(JSONB, nullable=False, default=dict)
     is_active: Mapped[bool]      = mapped_column(nullable=False, default=True)

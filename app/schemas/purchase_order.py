@@ -17,12 +17,12 @@ class POLineItemNested(BaseModel):
 
 class PurchaseOrderCreate(BaseModel):
     vendor_id: int
-    created_by: int = None
+    created_by: int
     description: str
     notes: str = ""
     status: POStatus = "created"
     reconciliation_status: ReconciliationStatus = "pending"
-    order_date: datetime.date = None
+    order_date: datetime.date
     line_items: list[POLineItemNested]
 
 class PurchaseOrderOut(BaseModel):

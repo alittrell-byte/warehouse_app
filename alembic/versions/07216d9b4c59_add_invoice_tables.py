@@ -1,7 +1,7 @@
 """add invoice tables
 
 Revision ID: 07216d9b4c59
-Revises: ef494812fdeb
+Revises: 5d75b125d363
 Create Date: 2026-10-11 19:12:28.447395
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '07216d9b4c59'
-down_revision: Union[str, Sequence[str], None] = 'ef494812fdeb'
+down_revision: Union[str, Sequence[str], None] = '5d75b125d363'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
