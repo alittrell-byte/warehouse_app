@@ -5,7 +5,7 @@ provider "aws" {
 
 
 
-resource "aws_vpc" "wh-main" {
+resource "aws_vpc" "wh_main" {
   cidr_block = "10.0.0.0/16"
   tags = {
     Name        = "wh-test-VPC"
@@ -14,31 +14,26 @@ resource "aws_vpc" "wh-main" {
   }
 }
 
-moved {
-  from = aws_vpc.main
-  to   = aws_vpc.wh-main
-}
-
 locals {
-  subnet_0 = cidrsubnet(aws_vpc.wh-main.cidr_block, 8, 0) 
-  subnet_1 = cidrsubnet(aws_vpc.wh-main.cidr_block, 8, 1) 
+  subnet_0 = cidrsubnet(aws_vpc.wh_main.cidr_block, 8, 0)
+  subnet_1 = cidrsubnet(aws_vpc.wh_main.cidr_block, 8, 1)
 }
 
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
-resource "aws_internet_gateway" "wh-igw" {
-  vpc_id = aws_vpc.wh-main.id
+resource "aws_internet_gateway" "wh_igw" {
+  vpc_id = aws_vpc.wh_main.id
 
   tags = {
-    Name = "main-igw"
+    Name = "wh-igw"
   }
 }
 
-resource "aws_subnet" "wh-public" {
-  
-  vpc_id                  = aws_vpc.wh-main.id
+resource "aws_subnet" "wh_public" {
+
+  vpc_id                  = aws_vpc.wh_main.id
   cidr_block              = local.subnet_0
   availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = true # Automatically assigns public IPs to instances
@@ -48,8 +43,8 @@ resource "aws_subnet" "wh-public" {
   }
 }
 
-resource "aws_subnet" "wh-private" {
-  vpc_id            = aws_vpc.wh-main.id
+resource "aws_subnet" "wh_private" {
+  vpc_id            = aws_vpc.wh_main.id
   cidr_block        = local.subnet_1
   availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -59,38 +54,38 @@ resource "aws_subnet" "wh-private" {
 }
 
 resource "aws_route_table" "wh_public" {
-  vpc_id = aws_vpc.wh-main.id
+  vpc_id = aws_vpc.wh_main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.wh-igw.id
+    gateway_id = aws_internet_gateway.wh_igw.id
   }
 
   tags = { Name = "wh-public-rt" }
 }
 
 resource "aws_route_table_association" "wh_public" {
-  subnet_id      = aws_subnet.wh-public.id
+  subnet_id      = aws_subnet.wh_public.id
   route_table_id = aws_route_table.wh_public.id
 }
 
-resource "aws_subnet" "wh-public-b" {
-  vpc_id                  = aws_vpc.wh-main.id
-  cidr_block              = cidrsubnet(aws_vpc.wh-main.cidr_block, 8, 2)  # 10.0.2.0/24
+resource "aws_subnet" "wh_public_b" {
+  vpc_id                  = aws_vpc.wh_main.id
+  cidr_block              = cidrsubnet(aws_vpc.wh_main.cidr_block, 8, 2) # 10.0.2.0/24
   availability_zone       = data.aws_availability_zones.available.names[1]
   map_public_ip_on_launch = true
-  tags = { Name = "wh-public-subnet-1b" }
+  tags                    = { Name = "wh-public-subnet-1b" }
 }
 
-resource "aws_subnet" "wh-private-b" {
-  vpc_id            = aws_vpc.wh-main.id
-  cidr_block        = cidrsubnet(aws_vpc.wh-main.cidr_block, 8, 3)        # 10.0.3.0/24
+resource "aws_subnet" "wh_private_b" {
+  vpc_id            = aws_vpc.wh_main.id
+  cidr_block        = cidrsubnet(aws_vpc.wh_main.cidr_block, 8, 3) # 10.0.3.0/24
   availability_zone = data.aws_availability_zones.available.names[1]
-  tags = { Name = "wh-private-subnet-1b" }
+  tags              = { Name = "wh-private-subnet-1b" }
 }
 
 resource "aws_route_table_association" "wh_public_b" {
-  subnet_id      = aws_subnet.wh-public-b.id
+  subnet_id      = aws_subnet.wh_public_b.id
   route_table_id = aws_route_table.wh_public.id
 }
 
@@ -101,29 +96,29 @@ resource "aws_eip" "wh_nat" {
 
 resource "aws_nat_gateway" "wh_nat" {
   allocation_id = aws_eip.wh_nat.id
-  subnet_id     = aws_subnet.wh-public.id
+  subnet_id     = aws_subnet.wh_public.id
   tags          = { Name = "wh-nat" }
 
-  depends_on = [aws_internet_gateway.wh-igw]
+  depends_on = [aws_internet_gateway.wh_igw]
 }
 
 resource "aws_route_table" "wh_private" {
-  vpc_id = aws_vpc.wh-main.id
+  vpc_id = aws_vpc.wh_main.id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.wh_nat.id   # nat_gateway_id, not gateway_id
+    nat_gateway_id = aws_nat_gateway.wh_nat.id # nat_gateway_id, not gateway_id
   }
 
   tags = { Name = "wh-private-rt" }
 }
 
 resource "aws_route_table_association" "wh_private" {
-  subnet_id      = aws_subnet.wh-private.id
+  subnet_id      = aws_subnet.wh_private.id
   route_table_id = aws_route_table.wh_private.id
 }
 
 resource "aws_route_table_association" "wh_private_b" {
-  subnet_id      = aws_subnet.wh-private-b.id
+  subnet_id      = aws_subnet.wh_private_b.id
   route_table_id = aws_route_table.wh_private.id
 }

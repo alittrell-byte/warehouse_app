@@ -27,3 +27,6 @@ lock:
 
 reset:
 > docker compose down -v
+
+tf-init:
+> cd infra && terraform init -backend-config=backend.hcl

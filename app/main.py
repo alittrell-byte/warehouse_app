@@ -1,7 +1,5 @@
 # app/main.py
 from fastapi import FastAPI
-
-# from app.database import Base
 from app.routers import purchase_orders, vendors, po_line_items, products, product_vendors, receipts, packing_slips, packing_slip_lines, invoices, invoice_lines
 
 # Create tables on startup — fine for now, Alembic takes over once migrations exist

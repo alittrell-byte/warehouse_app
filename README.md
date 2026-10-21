@@ -1,4 +1,5 @@
 # Warehouse PO Reconciliation API
+[![CI](https://github.com/alittrell-byte/warehouse_app/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/alittrell-byte/warehouse_app/actions/workflows/ci.yml)
 
 A FastAPI + PostgreSQL service that automates a **three-way match**: checking that what a company *ordered* (purchase order), what actually *arrived* (receipt), and what the vendor *billed* (invoice) all agree before anyone pays.
 
@@ -113,12 +114,56 @@ Defined in `.github/workflows/ci.yml`. It runs on every push and pull request.
 
 ## Known gaps
 
-- `app` waits for `db` to be healthy but not for `migrator` to finish. On a fresh database the first requests can race the migration. Fix: `depends_on: migrator: condition: service_completed_successfully`.
 - Some foreign keys on `product` and `receipt` are not yet enforced.
 - Deferred by design: tolerance policy table, vendor returns, FIFO receipt-to-invoice matching, authentication.
 
+
+## Infrastructure (AWS, Terraform)
+
+`infra/` holds the AWS network the service will run on, built with Terraform only (no console changes).
+
+```mermaid
+flowchart TB
+    igw(["Internet gateway"])
+    subgraph vpc["VPC 10.0.0.0/16 (us-east-1)"]
+        subgraph aza["AZ a"]
+            pubA["public 10.0.0.0/24"]
+            privA["private 10.0.1.0/24"]
+        end
+        subgraph azb["AZ b"]
+            pubB["public 10.0.2.0/24"]
+            privB["private 10.0.3.0/24"]
+        end
+        nat["NAT gateway<br/>(in public AZ a)"]
+    end
+    igw <--> pubA & pubB
+    pubA --- nat
+    privA & privB -->|"0.0.0.0/0"| nat
+```
+
+**What it builds**
+- A VPC across two availability zones, each with a public and a private subnet.
+- Public subnets route to an internet gateway. Private subnets reach out through one NAT gateway and accept no inbound traffic from the internet. That's where the database and workloads will go.
+- One NAT gateway instead of one per AZ is a deliberate cost trade-off for a learning environment. If AZ a fails, the private subnets in AZ b lose outbound access. Production would use one per AZ.
+
+**State and access**
+- Remote state in S3 with native lock files (`use_lockfile`), so there's no DynamoDB table to manage.
+- The backend's bucket and key live in an untracked `backend.hcl` (partial backend configuration), so account-specific values stay out of the repo.
+- Authentication is through IAM Identity Center (SSO) with short-lived credentials. There are no long-lived access keys anywhere.
+
+**Running it**
+
+```bash
+cd infra
+aws sso login --profile <your-profile>
+export AWS_PROFILE=<your-profile>
+terraform init -backend-config=backend.hcl
+terraform plan
+terraform apply
+terraform destroy   # the NAT gateway costs about $1/day, so tear it down after each session
+```
+
+
 ## Next
 
-Phase 2 moves this to Kubernetes (kind): the migrator becomes a Job, `.env` becomes a ConfigMap and Secret, and the Dockerfile healthcheck becomes liveness and readiness probes.
-
-
+RDS PostgreSQL in the private subnets, then the AWS Solutions Architect Associate exam. After that, the service moves to Kubernetes: first a self-built cluster, then EKS provisioned with Terraform.

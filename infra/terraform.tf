@@ -5,11 +5,6 @@ terraform {
       version = "~> 6.3"
     }
   }
-  backend "s3" {
-    bucket       = "wh-test-bucket-058264322353-us-east-1-an"
-    key          = "wh_network_stack/terraform.tfstate"
-    region       = "us-east-1"
-    use_lockfile = true
-  }
+  backend "s3" {}
   required_version = ">= 1.2"
 }
