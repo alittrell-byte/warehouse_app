@@ -1,5 +1,5 @@
 .RECIPEPREFIX = >
-.PHONY: check up down build logs test e2e lock reset
+.PHONY: check up down build logs test e2e demo lock reset
 
 check:
 > docker compose config -q
@@ -21,6 +21,9 @@ test:
 
 e2e:
 > ./scripts/endpoint_test.sh
+
+demo:
+> ./scripts/demo.sh
 
 lock:
 > docker compose run --rm --no-deps app pip freeze > requirements.lock
