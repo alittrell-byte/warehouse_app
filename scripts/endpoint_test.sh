@@ -5,81 +5,21 @@
 # po-line-items, packing-slips (nested lines), packing-slip-lines, receipts
 # (create + PATCH decision), invoices, invoice-lines (price-mismatch flag).
 #
-# Run from anywhere; it cd's to the repo root, loads .env, and resets the DB.
+# Run from anywhere; lib.sh cd's to the repo root and loads .env, then this
+# resets the DB.
 # Exits non-zero if any check fails, so CI can use it as-is later.
 #
-# Host port comes from APP_PORT (default 8082) to match compose.yml.
+# Host port comes from APP_PORT (default 8090) to match compose.yml.
 #
 # Known gap: PackingSlipOut doesn't return its lines and there's no GET
 # endpoint yet, so step 6 does one psql lookup to get the line ids.
 
-cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit 1
-
-set -a
-[ -f .env ] && source .env
-set +a
-
-BASE_URL="http://localhost:${APP_PORT:-8090}"
-DB_USER="${POSTGRES_USER}"
-DB_NAME="${POSTGRES_DB}"
-PASS=0
-FAIL=0
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 echo "Target: $BASE_URL"
 curl -sf "$BASE_URL/health" > /dev/null || { echo "API not reachable at $BASE_URL -- is the stack up?"; exit 1; }
 
-docker compose exec -T db psql -U "$DB_USER" -d "$DB_NAME" -c \
-  "TRUNCATE TABLE vendor, product, product_vendor, purchase_order, po_line_item, packing_slip, packing_slip_line, receipt, invoice, invoice_line RESTART IDENTITY CASCADE;" \
-  || { echo "TRUNCATE failed -- missing table? run the migrator first"; exit 1; }
-
-# Runs one HTTP request, prints PASS/FAIL, updates counters, sets LAST_BODY.
-# Call as a plain statement, never inside $(...): a subshell would swallow
-# the PASS/FAIL updates.
-check() {
-  local name="$1" method="$2" path="$3" data="$4" expected="${5:-200 201}"
-  local resp status
-  resp=$(curl -s -w "\n%{http_code}" -X "$method" "$BASE_URL$path" \
-    -H "Content-Type: application/json" -d "$data")
-  status=$(echo "$resp" | tail -n1)
-  LAST_BODY=$(echo "$resp" | sed '$d')
-  if [[ " $expected " == *" $status "* ]]; then
-    echo "PASS  $name  ($status)"
-    PASS=$((PASS+1))
-  else
-    echo "FAIL  $name  ($status, expected one of: $expected)"
-    FAIL=$((FAIL+1))
-  fi
-  echo "$LAST_BODY"
-}
-
-# Pulls one key out of a JSON body. Booleans print lowercase, missing -> "".
-json_get() {
-  python3 -c '
-import sys, json
-try:
-    v = json.load(sys.stdin).get(sys.argv[1], "")
-    print(str(v).lower() if isinstance(v, bool) else ("null" if v is None else v))
-except Exception:
-    print("")
-' "$1"
-}
-
-# Asserts a field in LAST_BODY. A 200 alone doesn't prove the logic worked.
-assert_field() {
-  local name="$1" field="$2" expected="$3" actual
-  actual=$(echo "$LAST_BODY" | json_get "$field")
-  if [[ "$actual" == "$expected" ]]; then
-    echo "PASS  $name  ($field=$actual)"
-    PASS=$((PASS+1))
-  else
-    echo "FAIL  $name  ($field: expected '$expected', got '$actual')"
-    FAIL=$((FAIL+1))
-  fi
-}
-
-sql_val() {
-  docker compose exec -T db psql -U "$DB_USER" -d "$DB_NAME" -tA -c "$1"
-}
+reset_db
 
 echo "== 1. Create vendor =="
 check "create vendor" POST "/vendors/" '{"name": "Test Vendor"}'

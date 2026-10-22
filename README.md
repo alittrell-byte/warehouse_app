@@ -5,6 +5,8 @@ A FastAPI + PostgreSQL service that automates a **three-way match**: checking th
 
 If you've never worked in a warehouse: a company orders 10 boxes of a product. The truck delivers 13, the packing slip says 10, and the invoice charges a higher price than agreed. Someone has to catch that before paying. This API records each document, compares them, and flags only the exceptions (overages, shortages, duplicates, price mismatches) so people review problems instead of every line.
 
+**See it work:** `make up && make demo` plays one order through the API and checks 23 claims along the way. [How it works](docs/how-it-works.md) walks through the request flow, the rules, and an annotated run.
+
 ## Data flow
 1. Must exist
  - Vendor
@@ -77,6 +79,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.lock
 make test                     # unit tests for the reconciliation rules
 make e2e                      # 19-step end-to-end test against the running stack
+make demo                     # narrated walkthrough; ./scripts/demo.sh --pause to step through
 ```
 
 `.env` needs `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` and `APP_PORT`.
